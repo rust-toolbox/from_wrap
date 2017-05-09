@@ -5,7 +5,7 @@ extern crate quote;
 
 use proc_macro::TokenStream;
 
-#[proc_macro_derive(SingleFrom)]
+#[proc_macro_derive(SingleFrom, attributes(not_generate_from))]
 pub fn single_from(input: TokenStream) -> TokenStream {
     let input: String = input.to_string();
     let ast = syn::parse_macro_input(&input).expect("Couldn't parse item");
@@ -17,7 +17,7 @@ fn impl_single_from(ast: &syn::MacroInput) -> quote::Tokens {
     let name = &ast.ident;
     // Check if the derive was specified for a struct, enum or tuple
     match ast.body {
-        // This is a struct
+        // This is a Struct
         syn::Body::Struct(syn::VariantData::Struct(ref fields)) => {
             if fields.len() != 1 {
                 panic!("This derive is defined for struct with one field only!");
@@ -32,7 +32,7 @@ fn impl_single_from(ast: &syn::MacroInput) -> quote::Tokens {
                 }
             }
         },
-        // This is a tuple
+        // This is a Tuple
         syn::Body::Struct(syn::VariantData::Tuple(ref tuple)) => {
             if tuple.len() != 1 {
                 panic!("This derive is defined for tuple with one field only!");
@@ -46,45 +46,60 @@ fn impl_single_from(ast: &syn::MacroInput) -> quote::Tokens {
                 }
             }
         },
-        // This is an enum
+        // This is an Enum
         syn::Body::Enum(ref variants) => {
             let cases = variants.iter().map(|variant| {
-                // Check if the enum contains tuples only
-                let source = match variant.data {
-                    // Yes, this is an tuple
-                    syn::VariantData::Tuple(ref tuple) => {
-                        if tuple.len() != 1 {
-                            panic!("This derive is defined for enum with variants as tuples with one field only!");
-                        }
-                        &tuple[0]
-                    },
-                    // Nope. This is struct or unit. We cannot handle these!
-                    _ => panic!("This derive is defined for enums with tuples only, not structs or units!")
-                };
+
+                // Skip #[not_generate_from] variant
+                if variant.attrs.iter()
+                        .find(|item| {
+                            match item.value {
+                                syn::MetaItem::Word(ref ident) => ident.as_ref() == "not_generate_from",
+                                _ => false
+                            }
+                        }).is_some() {
+                    return quote!();
+                }
 
                 let ident = &variant.ident;
-                quote!{
-                    impl From<#source> for #name {
-                        fn from(value: #source) -> #name {
-                            #name::#ident(value)
+                // Get enum variant type only for Struct or Tuple
+                match variant.data {
+                    // This is a Struct
+                    syn::VariantData::Struct(ref fields) => {
+                        if fields.len() != 1 {
+                            panic!("This derive is defined for enum with variants as structs or tuples with one field only!");
                         }
-                    }
-                }
+                        let source = &fields[0].ty;
+                        let field = &fields[0].ident;
+                        quote!{
+                            impl From<#source> for #name {
+                                fn from(value: #source) -> #name {
+                                    #name::#ident { #field: value }
+                                }
+                            }
+                        }
+                    },
+                    // This is an Tuple
+                    syn::VariantData::Tuple(ref tuple) => {
+                        if tuple.len() != 1 {
+                            panic!("This derive is defined for enum with variants as structs or tuples with one field only!");
+                        }
+                        let source = &tuple[0].ty;
+                        quote!{
+                            impl From<#source> for #name {
+                                fn from(value: #source) -> #name {
+                                    #name::#ident(value)
+                                }
+                            }
+                        }
+                    },
+                    // Nope. This is an Unit.
+                    syn::VariantData::Unit => quote!()
+                } // return quoted
             });
             quote!{ #(#cases)* }
         },
-        // Nope. This is a not struct, enum or tuple. We cannot handle these!
-        _ => panic!("This derive is only defined for structs, enums and tuples, not for other!")
+        // Nope. This is a not Struct, Enum or Tuple. We cannot handle these!
+        _ => panic!("This derive is only defined for struct, enum or tuple, not for other!")
     }
 }
-
-//fn quote_from(name, sourceType, targetType) {
-//    let ident = &variant.ident;
-//    quote!{
-//        impl From<#source> for #name {
-//            fn from(value: #source) -> #name {
-//                #name::#ident(value)
-//            }
-//        }
-//    }
-//}
