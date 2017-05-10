@@ -5,7 +5,7 @@ extern crate quote;
 
 use proc_macro::TokenStream;
 
-#[proc_macro_derive(SingleFrom, attributes(not_generate_from))]
+#[proc_macro_derive(SingleFrom, attributes(generate_from, not_generate_from))]
 pub fn single_from(input: TokenStream) -> TokenStream {
     let input: String = input.to_string();
     let ast = syn::parse_macro_input(&input).expect("Couldn't parse item");
@@ -48,19 +48,37 @@ fn impl_single_from(ast: &syn::MacroInput) -> quote::Tokens {
         },
         // This is an Enum
         syn::Body::Enum(ref variants) => {
-            let cases = variants.iter().map(|variant| {
+            let mut accepted = Vec::<&syn::Variant>::new();
 
-                // Skip #[not_generate_from] variant
-                if variant.attrs.iter()
-                        .find(|item| {
-                            match item.value {
-                                syn::MetaItem::Word(ref ident) => ident.as_ref() == "not_generate_from",
-                                _ => false
-                            }
-                        }).is_some() {
-                    return quote!();
+            // collect accepted variants if "generate_from" attribute exists
+            for variant in variants {
+                if variant.attrs.iter().find(|item| {
+                    match item.value {
+                        syn::MetaItem::Word(ref ident) => ident.as_ref() == "generate_from",
+                        _ => false
+                    }
+                }).is_some() {
+                    accepted.push(variant);
                 }
+            }
 
+            // collect accepted variants if "generate_from" attribute not exists
+            // (variants with attributes "not_generate_from" must are skipped)
+            if accepted.len() == 0 {
+                for variant in variants {
+                    if !variant.attrs.iter().find(|item| {
+                        match item.value {
+                            syn::MetaItem::Word(ref ident) => ident.as_ref() == "not_generate_from",
+                            _ => false
+                        }
+                    }).is_some() {
+                        accepted.push(variant);
+                    }
+                }
+            }
+
+            // Produce quoted cases for accepted variants
+            let cases = accepted.iter().map(|variant| {
                 let ident = &variant.ident;
                 // Get enum variant type only for Struct or Tuple
                 match variant.data {

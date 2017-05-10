@@ -72,9 +72,7 @@ fn enum_with_mixed() {
     enum EnumWithMixed {
         Str { s: String },
         Int(i32),
-        SomeUnit,
-        #[not_generate_from]
-        Pair(i32, i32)
+        SomeUnit
     }
 
     assert!(match EnumWithMixed::from(12) {
@@ -83,6 +81,60 @@ fn enum_with_mixed() {
     });
     assert!(match EnumWithMixed::from("qwerty".to_owned()) {
         EnumWithMixed::Str { s } => s == "qwerty",
+        _ => false
+    });
+}
+
+#[test]
+#[allow(dead_code)]
+fn enum_with_not_generate() {
+    #[derive(SingleFrom)]
+    enum EnumWithAttrs {
+        Str { s: String },
+        Int(i32),
+        SomeUnit,
+        #[not_generate_from]
+        Pair(i32, i32),
+        #[not_generate_from]
+        Flt(f64),
+        #[not_generate_from]
+        Struct { a: i32, b: i32 }
+    }
+
+    assert!(match EnumWithAttrs::from(12) {
+        EnumWithAttrs::Int(x) => x == 12,
+        _ => false
+    });
+    assert!(match EnumWithAttrs::from("qwerty".to_owned()) {
+        EnumWithAttrs::Str { s } => s == "qwerty",
+        _ => false
+    });
+}
+
+#[test]
+#[allow(dead_code)]
+fn enum_with_generate() {
+    #[derive(SingleFrom)]
+    enum EnumWithAttrs {
+        #[generate_from]
+        Str { s: String },
+        Text { t: String },
+        #[generate_from]
+        Int(i32),
+        Num(i32),
+        SomeUnit,
+        Pair(i32, i32),
+        Flt(f64),
+        #[not_generate_from] // this is not required, because generate_from already exist
+        Struct { a: i32, b: i32 }
+    }
+
+    assert!(match EnumWithAttrs::from(12) {
+        EnumWithAttrs::Int(x) => x == 12,
+        _ => false
+    });
+    assert!(match EnumWithAttrs::from("qwerty".to_owned()) {
+        EnumWithAttrs::Str { s } => s == "qwerty",
         _ => false
     });
 }
