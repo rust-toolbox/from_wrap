@@ -1,9 +1,9 @@
 #[macro_use]
-extern crate single_from;
+extern crate simple_from;
 
 #[test]
 fn single_struct() {
-    #[derive(SingleFrom)]
+    #[derive(SimpleFrom)]
     struct SingleStruct {
         s: String
     }
@@ -18,7 +18,7 @@ fn single_struct() {
 
 #[test]
 fn single_tuple() {
-    #[derive(SingleFrom)]
+    #[derive(SimpleFrom)]
     struct SingleTuple(String);
 
     assert!(match SingleTuple::from("qwerty".to_owned()) {
@@ -31,7 +31,7 @@ fn single_tuple() {
 
 #[test]
 fn enum_with_tuples() {
-    #[derive(SingleFrom)]
+    #[derive(SimpleFrom)]
     enum EnumWithTuples {
         Str(String),
         Int(i32)
@@ -49,7 +49,7 @@ fn enum_with_tuples() {
 
 #[test]
 fn enum_with_structs() {
-    #[derive(SingleFrom)]
+    #[derive(SimpleFrom)]
     enum EnumWithStructs {
         Str { s: String },
         Int { x: i32 }
@@ -68,7 +68,7 @@ fn enum_with_structs() {
 #[test]
 #[allow(dead_code)]
 fn enum_with_mixed() {
-    #[derive(SingleFrom)]
+    #[derive(SimpleFrom)]
     enum EnumWithMixed {
         Str { s: String },
         Int(i32),
@@ -88,7 +88,7 @@ fn enum_with_mixed() {
 #[test]
 #[allow(dead_code)]
 fn enum_with_not_generate() {
-    #[derive(SingleFrom)]
+    #[derive(SimpleFrom)]
     enum EnumWithAttrs {
         Str { s: String },
         Int(i32),
@@ -114,7 +114,7 @@ fn enum_with_not_generate() {
 #[test]
 #[allow(dead_code)]
 fn enum_with_generate() {
-    #[derive(SingleFrom)]
+    #[derive(SimpleFrom)]
     enum EnumWithAttrs {
         #[generate_from]
         Str { s: String },

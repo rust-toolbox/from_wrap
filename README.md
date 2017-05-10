@@ -1,2 +1,2 @@
-# single_from
-The generate From macro for single types
+# simple_from
+The macro to generate simple implementation of From

@@ -5,15 +5,15 @@ extern crate quote;
 
 use proc_macro::TokenStream;
 
-#[proc_macro_derive(SingleFrom, attributes(generate_from, not_generate_from))]
-pub fn single_from(input: TokenStream) -> TokenStream {
+#[proc_macro_derive(SimpleFrom, attributes(generate_from, not_generate_from))]
+pub fn simple_from(input: TokenStream) -> TokenStream {
     let input: String = input.to_string();
     let ast = syn::parse_macro_input(&input).expect("Couldn't parse item");
-    let result = impl_single_from(&ast);
+    let result = impl_simple_from(&ast);
     result.parse().expect("Couldn't parse string to tokens")
 }
 
-fn impl_single_from(ast: &syn::MacroInput) -> quote::Tokens {
+fn impl_simple_from(ast: &syn::MacroInput) -> quote::Tokens {
     let name = &ast.ident;
     // Check if the derive was specified for a struct, enum or tuple
     match ast.body {
