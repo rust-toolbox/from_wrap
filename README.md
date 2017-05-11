@@ -5,7 +5,7 @@ The macro to generate simple implementation of From, when the target type value 
 
 If you're using `Cargo` to manage dependencies, just add from_wrap to the `Cargo.toml`:
 
-```
+```toml
 [dependencies]
 from_wrap = { git = "https://github.com/rust-toolbox/from_wrap.git" }
 ```
@@ -59,7 +59,9 @@ impl From<i32> for MyEnum {
     }
 }
 ```
+
 If you want to generate From implementations for only some variants, use `generate_from_wrap` or `not_generate_from_wrap` attributes as follows:
+
 ```rust
 #[derive(FromWrap)]
 enum MyEnum {
@@ -74,7 +76,9 @@ enum MyEnum {
     SomeStruct { a: i32, b: i32 }
 }
 ```
+
 or
+
 ```rust
 #[derive(FromWrap)]
 enum MyEnum {
@@ -88,6 +92,7 @@ enum MyEnum {
     SomeStruct { a: i32, b: i32 }
 }
 ```
+
 The From implementation will not be generated for Enum variants such as Units, Structs and Tuples containing more than one field.
 
 ## License
