@@ -72,7 +72,9 @@ fn enum_with_mixed() {
     enum EnumWithMixed {
         Str { s: String },
         Int(i32),
-        SomeUnit
+        SomeUnit,
+        Pair(i32, i32),
+        SomeStruct { a: i32, b: i32 }
     }
 
     assert!(match EnumWithMixed::from(12) {

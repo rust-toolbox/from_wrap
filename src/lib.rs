@@ -4,6 +4,8 @@ extern crate syn;
 extern crate quote;
 
 use proc_macro::TokenStream;
+use quote::Tokens;
+use quote::ToTokens;
 
 #[proc_macro_derive(FromWrap, attributes(generate_from_wrap, not_generate_from_wrap))]
 pub fn simple_from(input: TokenStream) -> TokenStream {
@@ -13,39 +15,52 @@ pub fn simple_from(input: TokenStream) -> TokenStream {
     result.parse().expect("Couldn't parse string to tokens")
 }
 
-fn impl_simple_from(ast: &syn::MacroInput) -> quote::Tokens {
+fn quote_struct(source: &ToTokens, target: &ToTokens, wrapper: &ToTokens, field: &ToTokens) -> Tokens {
+    quote! {
+        impl From<#source> for #target {
+            fn from(value: #source) -> #target {
+                #wrapper { #field: value }
+            }
+        }
+    }
+}
+
+fn quote_tuple(source: &ToTokens, target: &ToTokens, wrapper: &ToTokens) -> Tokens {
+    quote! {
+        impl From<#source> for #target {
+            fn from(value: #source) -> #target {
+                #wrapper(value)
+            }
+        }
+    }
+}
+
+fn impl_simple_from(ast: &syn::MacroInput) -> Tokens {
     let name = &ast.ident;
     // Check if the derive was specified for a struct, enum or tuple
     match ast.body {
+
         // This is a Struct
         syn::Body::Struct(syn::VariantData::Struct(ref fields)) => {
-            if fields.len() != 1 {
+            if fields.len() == 1 {
+                let source = &fields[0].ty;
+                let ident = &fields[0].ident;
+                quote_struct(source, name, name, ident)
+            } else {
                 panic!("This derive is defined for struct with one field only!");
             }
-            let source = &fields[0].ty;
-            let ident = &fields[0].ident;
-            quote!{
-                impl From<#source> for #name {
-                    fn from(value: #source) -> #name {
-                        #name { #ident: value }
-                    }
-                }
-            }
         },
+
         // This is a Tuple
         syn::Body::Struct(syn::VariantData::Tuple(ref tuple)) => {
-            if tuple.len() != 1 {
+            if tuple.len() == 1 {
+                let source = &tuple[0].ty;
+                quote_tuple(source, name, name)
+            } else {
                 panic!("This derive is defined for tuple with one field only!");
             }
-            let source = &tuple[0].ty;
-            quote!{
-                impl From<#source> for #name {
-                    fn from(value: #source) -> #name {
-                        #name( value )
-                    }
-                }
-            }
         },
+
         // This is an Enum
         syn::Body::Enum(ref variants) => {
             let mut accepted = Vec::<&syn::Variant>::new();
@@ -84,31 +99,21 @@ fn impl_simple_from(ast: &syn::MacroInput) -> quote::Tokens {
                 match variant.data {
                     // This is a Struct
                     syn::VariantData::Struct(ref fields) => {
-                        if fields.len() != 1 {
-                            panic!("This derive is defined for enum with variants as structs or tuples with one field only!");
-                        }
-                        let source = &fields[0].ty;
-                        let field = &fields[0].ident;
-                        quote!{
-                            impl From<#source> for #name {
-                                fn from(value: #source) -> #name {
-                                    #name::#ident { #field: value }
-                                }
-                            }
+                        if fields.len() == 1 {
+                            let source = &fields[0].ty;
+                            let field = &fields[0].ident;
+                            quote_struct(source, name, &quote!(#name::#ident), field)
+                        } else {
+                            quote!()
                         }
                     },
                     // This is an Tuple
                     syn::VariantData::Tuple(ref tuple) => {
-                        if tuple.len() != 1 {
-                            panic!("This derive is defined for enum with variants as structs or tuples with one field only!");
-                        }
-                        let source = &tuple[0].ty;
-                        quote!{
-                            impl From<#source> for #name {
-                                fn from(value: #source) -> #name {
-                                    #name::#ident(value)
-                                }
-                            }
+                        if tuple.len() == 1 {
+                            let source = &tuple[0].ty;
+                            quote_tuple(source, name, &quote!(#name::#ident))
+                        } else {
+                            quote!()
                         }
                     },
                     // Nope. This is an Unit.
