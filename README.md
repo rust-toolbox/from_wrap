@@ -1,6 +1,15 @@
 # from_wrap
 The macro to generate simple implementation of From, when the target type value is a wrapper on source type value.
 
+## Installation
+
+If you're using `Cargo` to manage dependencies, just add from_wrap to the `Cargo.toml`:
+
+```
+[dependencies]
+from_wrap = { git = "https://github.com/rust-toolbox/from_wrap.git" }
+```
+
 ## Usage
 
 ```rust
@@ -80,3 +89,7 @@ enum MyEnum {
 }
 ```
 The From implementation will not be generated for Enum variants such as Units, Structs and Tuples containing more than one field.
+
+## License
+
+Public Domain
