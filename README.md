@@ -55,7 +55,7 @@ impl From<String> for MyEnum {
 
 impl From<i32> for MyEnum {
     fn from(value: i32) -> MyEnum {
-        MyEnum::Int(i32)
+        MyEnum::Int(value)
     }
 }
 ```
