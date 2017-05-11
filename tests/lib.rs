@@ -1,9 +1,9 @@
 #[macro_use]
-extern crate simple_from;
+extern crate from_wrap;
 
 #[test]
 fn single_struct() {
-    #[derive(SimpleFrom)]
+    #[derive(FromWrap)]
     struct SingleStruct {
         s: String
     }
@@ -18,7 +18,7 @@ fn single_struct() {
 
 #[test]
 fn single_tuple() {
-    #[derive(SimpleFrom)]
+    #[derive(FromWrap)]
     struct SingleTuple(String);
 
     assert!(match SingleTuple::from("qwerty".to_owned()) {
@@ -31,7 +31,7 @@ fn single_tuple() {
 
 #[test]
 fn enum_with_tuples() {
-    #[derive(SimpleFrom)]
+    #[derive(FromWrap)]
     enum EnumWithTuples {
         Str(String),
         Int(i32)
@@ -49,7 +49,7 @@ fn enum_with_tuples() {
 
 #[test]
 fn enum_with_structs() {
-    #[derive(SimpleFrom)]
+    #[derive(FromWrap)]
     enum EnumWithStructs {
         Str { s: String },
         Int { x: i32 }
@@ -68,7 +68,7 @@ fn enum_with_structs() {
 #[test]
 #[allow(dead_code)]
 fn enum_with_mixed() {
-    #[derive(SimpleFrom)]
+    #[derive(FromWrap)]
     enum EnumWithMixed {
         Str { s: String },
         Int(i32),
@@ -88,16 +88,16 @@ fn enum_with_mixed() {
 #[test]
 #[allow(dead_code)]
 fn enum_with_not_generate() {
-    #[derive(SimpleFrom)]
+    #[derive(FromWrap)]
     enum EnumWithAttrs {
         Str { s: String },
         Int(i32),
         SomeUnit,
-        #[not_generate_from]
+        #[not_generate_from_wrap]
         Pair(i32, i32),
-        #[not_generate_from]
+        #[not_generate_from_wrap]
         Flt(f64),
-        #[not_generate_from]
+        #[not_generate_from_wrap]
         Struct { a: i32, b: i32 }
     }
 
@@ -114,18 +114,18 @@ fn enum_with_not_generate() {
 #[test]
 #[allow(dead_code)]
 fn enum_with_generate() {
-    #[derive(SimpleFrom)]
+    #[derive(FromWrap)]
     enum EnumWithAttrs {
-        #[generate_from]
+        #[generate_from_wrap]
         Str { s: String },
         Text { t: String },
-        #[generate_from]
+        #[generate_from_wrap]
         Int(i32),
         Num(i32),
         SomeUnit,
         Pair(i32, i32),
         Flt(f64),
-        #[not_generate_from] // this is not required, because generate_from already exist
+        #[not_generate_from_wrap] // this is not required, because generate_from_wrap already exist
         Struct { a: i32, b: i32 }
     }
 

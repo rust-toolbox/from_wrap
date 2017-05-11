@@ -5,7 +5,7 @@ extern crate quote;
 
 use proc_macro::TokenStream;
 
-#[proc_macro_derive(SimpleFrom, attributes(generate_from, not_generate_from))]
+#[proc_macro_derive(FromWrap, attributes(generate_from_wrap, not_generate_from_wrap))]
 pub fn simple_from(input: TokenStream) -> TokenStream {
     let input: String = input.to_string();
     let ast = syn::parse_macro_input(&input).expect("Couldn't parse item");
@@ -50,11 +50,11 @@ fn impl_simple_from(ast: &syn::MacroInput) -> quote::Tokens {
         syn::Body::Enum(ref variants) => {
             let mut accepted = Vec::<&syn::Variant>::new();
 
-            // collect accepted variants if "generate_from" attribute exists
+            // collect accepted variants if "generate_from_wrap" attribute exists
             for variant in variants {
                 if variant.attrs.iter().find(|item| {
                     match item.value {
-                        syn::MetaItem::Word(ref ident) => ident.as_ref() == "generate_from",
+                        syn::MetaItem::Word(ref ident) => ident.as_ref() == "generate_from_wrap",
                         _ => false
                     }
                 }).is_some() {
@@ -62,13 +62,13 @@ fn impl_simple_from(ast: &syn::MacroInput) -> quote::Tokens {
                 }
             }
 
-            // collect accepted variants if "generate_from" attribute not exists
-            // (variants with attributes "not_generate_from" must are skipped)
+            // collect accepted variants if "generate_from_wrap" attribute not exists
+            // (variants with attributes "not_generate_from_wrap" must are skipped)
             if accepted.len() == 0 {
                 for variant in variants {
                     if !variant.attrs.iter().find(|item| {
                         match item.value {
-                            syn::MetaItem::Word(ref ident) => ident.as_ref() == "not_generate_from",
+                            syn::MetaItem::Word(ref ident) => ident.as_ref() == "not_generate_from_wrap",
                             _ => false
                         }
                     }).is_some() {

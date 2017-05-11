@@ -1,6 +1,6 @@
 [package]
-name = "simple_from"
-version = "0.1.1"
+name = "from_wrap"
+version = "0.2.0"
 authors = ["XX <freecoder.xx@gmail.com>"]
 
 [lib]
